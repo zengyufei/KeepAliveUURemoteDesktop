@@ -11,7 +11,7 @@ message("CMAKE_CXX_COMPILER: ${CMAKE_CXX_COMPILER}")
 message("CMAKE_CXX_STANDARD: ${CMAKE_CXX_STANDARD}")
 
 # UTF-8 编译选项（仅对 GCC/Clang 生效）
-if( MSVC)
+if(MSVC)
     message("IS MSVC")
     # UTF-8 需要配置这个
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /utf-8")
@@ -154,14 +154,39 @@ include_directories(
 message("CMAKE_BUILD_TYPE == " ${CMAKE_BUILD_TYPE})
 
 
+# 添加自定义命令来复制 config.ini 文件到 build 目录
+add_custom_command(
+        OUTPUT ${CMAKE_BINARY_DIR}/config.ini
+        COMMAND ${CMAKE_COMMAND} -E copy_if_different ${CMAKE_SOURCE_DIR}/config.ini ${CMAKE_BINARY_DIR}/config.ini
+        DEPENDS ${CMAKE_SOURCE_DIR}/config.ini
+        COMMENT "Copying config.ini to build directory"
+)
+
+# 添加自定义目标来确保 config.ini 文件被复制
+add_custom_target(copy_config ALL
+        DEPENDS ${CMAKE_BINARY_DIR}/config.ini
+)
+
 # debug 模式带黑框 release不带
 if(CMAKE_BUILD_TYPE MATCHES "Debug")
     # 添加 .cpp 文件
-    add_executable(${PROJECT_NAME} main.cpp ${SRCS} res/resource.rc)
+    add_executable(${PROJECT_NAME} main.cpp ${SRCS})
+    if(EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/res/resource.rc")
+        target_sources(${PROJECT_NAME} PRIVATE res/resource.rc)
+    endif()
 elseif(CMAKE_BUILD_TYPE MATCHES "Release")
     # 添加 .cpp 文件
-    add_executable(${PROJECT_NAME} main.cpp ${SRCS} res/resource.rc)
+    add_executable(${PROJECT_NAME} main.cpp ${SRCS})
+    if(EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/res/resource.rc")
+        target_sources(${PROJECT_NAME} PRIVATE res/resource.rc)
+    endif()
     set_target_properties(${PROJECT_NAME} PROPERTIES LINK_FLAGS "/subsystem:windows /ENTRY:mainCRTStartup")
+else()
+    # 默认情况
+    add_executable(${PROJECT_NAME} main.cpp ${SRCS})
+    if(EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/res/resource.rc")
+        target_sources(${PROJECT_NAME} PRIVATE res/resource.rc)
+    endif()
 endif()
 
 ##########################################################################################
@@ -209,21 +234,7 @@ endif()
 ##########################################################################################
 
 
-# 添加自定义命令来复制 config.ini 文件到 build 目录
-add_custom_command(
-    OUTPUT ${CMAKE_BINARY_DIR}/config.ini
-    COMMAND ${CMAKE_COMMAND} -E copy_if_different ${CMAKE_SOURCE_DIR}/config.ini ${CMAKE_BINARY_DIR}/config.ini
-    DEPENDS ${CMAKE_SOURCE_DIR}/config.ini
-    COMMENT "Copying config.ini to build directory"
-)
-
-# 添加自定义目标来确保 config.ini 文件被复制
-# 注意：此目标标记为 ALL，因此会在每次构建时自动执行
-add_custom_target(copy_config ALL
-    DEPENDS ${CMAKE_BINARY_DIR}/config.ini
-)
-
-# 显式依赖主目标
+# 现在添加依赖，因为目标已经创建
 add_dependencies(${PROJECT_NAME} copy_config)
 
 
