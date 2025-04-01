@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.26)
-project(pukangRun)
+project(KeepAliveUURemoteDesktop)
 
 # 设置 MSVC 特性
 set(CMAKE_CXX_STANDARD 17)
@@ -182,7 +182,7 @@ endif()
 
 #set(YAML_LIBRARY "${CMAKE_CURRENT_SOURCE_DIR}\\other\\yaml-cpp\\lib\\${CMAKE_BUILD_TYPE}\\yaml-cpp.lib")
 # target_link_libraries(${PROJECT_NAME} ${CURL_LIBRARY} ${ZLIB_LIBRARY} ws2_32 crypt32)
-target_link_libraries(${PROJECT_NAME} ${LIBS} ${OTHER_LIBS} ws2_32 crypt32)
+target_link_libraries(${PROJECT_NAME} ${LIBS} ${OTHER_LIBS})
 
 
 ##########################################################################################
