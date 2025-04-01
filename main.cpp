@@ -56,6 +56,7 @@ void run(int argc, char *argv[]) {
     // 【Settings】
     std::wstring path;
     std::wstring programName;
+    std::wstring secondsStr;
 
     // 获取配置文件
     IniUtil ini(Constant::CONFIG_FILE_NAME);
@@ -63,6 +64,7 @@ void run(int argc, char *argv[]) {
     // 【Settings】
     path = ini.getValue(Constant::SETTINGS, Constant::KEY_PATH);
     programName = ini.getValue(Constant::SETTINGS, Constant::KEY_PROGRAM_NAME);
+    secondsStr = ini.getValue(Constant::SETTINGS, Constant::KEY_SECONDS);
 
     // 替换环境变量
     path = FileUtil::fixPath(EnvUtil::replaceEnvVars(path));
@@ -85,9 +87,8 @@ void run(int argc, char *argv[]) {
         return;
     }
 
-    int seconds = 15;
 
-    foo(path, programName, seconds);
+    foo(path, programName, Convert::toInt(secondsStr, 15));
 
 
 }

@@ -12,6 +12,7 @@ public:
     // 配置键名常量
     static const std::wstring KEY_PATH;
     static const std::wstring KEY_PROGRAM_NAME;
+    static const std::wstring KEY_SECONDS;
 };
 
 #endif // CONSTANT_H
