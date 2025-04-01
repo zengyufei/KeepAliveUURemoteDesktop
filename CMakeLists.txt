@@ -182,7 +182,20 @@ endif()
 
 #set(YAML_LIBRARY "${CMAKE_CURRENT_SOURCE_DIR}\\other\\yaml-cpp\\lib\\${CMAKE_BUILD_TYPE}\\yaml-cpp.lib")
 # target_link_libraries(${PROJECT_NAME} ${CURL_LIBRARY} ${ZLIB_LIBRARY} ws2_32 crypt32)
-target_link_libraries(${PROJECT_NAME} ${LIBS} ${OTHER_LIBS})
+
+# 链接库文件
+if(LIBS)
+    target_link_libraries(${PROJECT_NAME} ${LIBS})
+endif()
+
+if(OTHER_LIBS)
+    target_link_libraries(${PROJECT_NAME} ${OTHER_LIBS})
+endif()
+
+# 如果在 Windows 上，可能需要链接一些特定的库
+#if(WIN32)
+#    target_link_libraries(${PROJECT_NAME} ws2_32 winmm)
+#endif()
 
 
 ##########################################################################################
