@@ -26,22 +26,21 @@ jobs:
 
     - name: Configure CMake
       working-directory: ./build
-      run: cmake .. -G "Visual Studio 16 2019" -A x64
+      run: cmake ..
 
-    - name: Build with MSBuild
+    - name: Build with CMake
       working-directory: ./build
-      run: msbuild ALL_BUILD.vcxproj /p:Configuration=Release /p:Platform=x64
+      run: cmake --build . --config Release
 
     - name: Copy necessary files
       run: |
         mkdir dist
-        copy build\Release\*.exe dist\
+        copy build\Release\*.exe dist\ || copy build\*.exe dist\
         copy config.ini dist\ || echo "config.ini not found, skipping"
 
     - name: Create ZIP archive
       run: |
         Compress-Archive -Path dist\* -DestinationPath app.zip
-
 
     - name: Create Release
       if: github.event_name == 'push' && startsWith(github.ref, 'refs/tags/')
