@@ -160,7 +160,7 @@ public:
                     return true;
                 }
             } catch (const std::filesystem::filesystem_error& e) {
-                LogUtil::error(L"删除文件时发生错误: " + path + L" - " + StrUtil::convertUtf8(e.what()));
+                LogUtil::error(L"删除文件时发生错误: " + path + L" - " + StrUtil::convertStringToWstring(e.what()));
                 return false;
             }
         }
@@ -197,7 +197,7 @@ public:
             LogUtil::info(L"文件移动成功: source=" + source + L", destination=" + destination);
             return true;
         } catch (const std::filesystem::filesystem_error& e) {
-            LogUtil::error(L"移动文件时发生错误: source=" + source + L", destination=" + destination + L" - " + StrUtil::convertUtf8(e.what()));
+            LogUtil::error(L"移动文件时发生错误: source=" + source + L", destination=" + destination + L" - " + StrUtil::convertStringToWstring(e.what()));
             return false;
         }
     }

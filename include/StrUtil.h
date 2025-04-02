@@ -1,5 +1,6 @@
 #ifndef STRUTIL_H
 #define STRUTIL_H
+#pragma once
 
 //#include <string>
 #include <cctype>    // for std::isspace
@@ -15,8 +16,7 @@ using namespace std;
 
 class StrUtil {
 public:
-    // Convert between UTF-8 and wide strings
-    static std::wstring convertUtf8(const std::string &str) {
+    static std::wstring convertStringToWstring(const std::string &str) {
         // 确保路径使用UTF-8编码
         std::wstring_convert<std::codecvt_utf8_utf16<wchar_t>> converter;
         std::wstring widePath = converter.from_bytes(str);
