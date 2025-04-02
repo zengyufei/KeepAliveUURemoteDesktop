@@ -1,1 +1,18 @@
-IDI_ICON1 ICON DISCARDABLE  "icon.ico"
+#pragma code_page(65001)
+
+#include "resource.h"
+
+// Icon resources
+IDI_ICON1 ICON "icon.ico"
+
+// Menu resources
+IDR_MENU MENU
+BEGIN
+    POPUP "托盘菜单"
+
+    BEGIN
+            MENUITEM "关于", ID_MENU_ABOUT
+            MENUITEM SEPARATOR
+            MENUITEM "退出", ID_MENU_EXIT
+    END
+END

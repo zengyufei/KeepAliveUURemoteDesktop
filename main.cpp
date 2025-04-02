@@ -1,5 +1,8 @@
 #include <string>
 #include <windows.h>
+#include <thread>
+#include <atomic>
+#include <csignal>
 
 using namespace std;
 
@@ -13,39 +16,24 @@ using namespace std;
 #include "EnvUtil.h" // 引入环境变量工具头文件
 #include <thread>
 #include <chrono>
+#include "TrayIcon.h"
 
+// 全局变量，用于控制程序运行
+std::atomic<bool> g_running(true);
 
 bool executeFile(const std::wstring &programPath);
 
-void run(int argc, char *argv[]);
+void run();
 
-
-[[noreturn]] void foo(const wstring &path, const wstring &programName, int seconds);
-
-int main(int argc, char *argv[]) {
-    // 系统级编码设置
-    SetConsoleOutputCP(CP_UTF8);
-    SetConsoleCP(CP_UTF8);
-
-    // C++ 层面编码设置
-    std::locale::global(std::locale("en_US.UTF-8"));
-    std::wcout.imbue(std::locale());
-    std::cout.imbue(std::locale());
-
-    run(argc, argv);
-
-    return 0;
+// 信号处理函数
+void signalHandler(int signal) {
+    LogUtil::info(L"接收到信号: " + std::to_wstring(signal) + L"，准备退出程序");
+    g_running = false;
 }
 
-void run(int argc, char *argv[]) {
 
-    LogUtil::info(L"程序启动");
-
-    // 使用RAII模式确保在函数退出时清理资源
-    class LogCleanup {
-    public:
-        ~LogCleanup() { LogUtil::cleanup(); }
-    } logCleanup;
+// 保活线程函数
+void keepAliveThread() {
 
     // 检查配置文件是否存在
     if (!FileUtil::exists(Constant::CONFIG_FILE_NAME)) {
@@ -86,16 +74,8 @@ void run(int argc, char *argv[]) {
         LogUtil::error(L"error: " + path + L" 主进程路径文件不存在");
         return;
     }
-
-
-    foo(path, programName, Convert::toInt(secondsStr, 15));
-
-
-}
-
-[[noreturn]] void foo(const wstring &path, const wstring &programName, int seconds) {
     int count = 1;
-    while (true) {
+    while (g_running) {
 
         if (isProcessRunningByName(programName)) {
             // 不需要杀进程，但是程序已启动，则不做任何事
@@ -112,10 +92,78 @@ void run(int argc, char *argv[]) {
         }
 
         // 休眠指定的秒数
-        this_thread::sleep_for(chrono::seconds(seconds));
+        this_thread::sleep_for(chrono::seconds(Convert::toInt(secondsStr, 15)));
 
         count++;
     }
+}
+
+
+
+
+int main(int argc, char *argv[]) {
+    // 系统级编码设置
+    SetConsoleOutputCP(CP_UTF8);
+    SetConsoleCP(CP_UTF8);
+
+    // C++ 层面编码设置
+    std::locale::global(std::locale("en_US.UTF-8"));
+    std::wcout.imbue(std::locale());
+    std::cout.imbue(std::locale());
+
+
+    LogUtil::info(L"================ 程序启动 ================");
+
+    // 使用RAII模式确保在函数退出时清理资源
+    class LogCleanup {
+    public:
+        ~LogCleanup() { LogUtil::cleanup(); }
+    } logCleanup;
+
+
+    run();
+
+    LogUtil::info(L"================ 程序结束 ================\n");
+
+    return 0;
+}
+
+void run() {
+
+
+    // 设置信号处理
+    std::signal(SIGINT, signalHandler);
+    std::signal(SIGTERM, signalHandler);
+
+    // 创建托盘图标
+    TrayIcon trayIcon;
+
+    // 设置托盘图标的退出回调
+    trayIcon.SetExitCallback([]() {
+        LogUtil::info(L"用户通过托盘菜单请求退出");
+        g_running = false;
+    });
+
+    // 启动托盘图标
+    if (!trayIcon.Start()) {
+        LogUtil::error(L"启动托盘图标失败");
+    }
+
+    // 创建保活线程
+    std::thread keepAliveThreadObj(keepAliveThread);
+
+    // 主线程等待，直到收到退出信号
+    LogUtil::info(L"主线程等待退出信号");
+    while (g_running) {
+        std::this_thread::sleep_for(std::chrono::milliseconds(100));
+    }
+
+    // 等待保活线程结束
+    LogUtil::info(L"等待保活线程结束");
+    if (keepAliveThreadObj.joinable()) {
+        keepAliveThreadObj.join();
+    }
+
 }
 
 

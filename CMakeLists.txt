@@ -191,25 +191,26 @@ add_custom_target(copy_config ALL
 )
 
 # debug 模式带黑框 release不带
-if(CMAKE_BUILD_TYPE MATCHES "Debug")
+if(CMAKE_BUILD_TYPE MATCHES "Release")
     # 添加 .cpp 文件
     add_executable(${PROJECT_NAME} main.cpp ${SRCS})
     if(EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/res/resource.rc")
-        target_sources(${PROJECT_NAME} PRIVATE res/resource.rc)
+        target_sources(${PROJECT_NAME} PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}/res/resource.rc")
+        message(" add ${CMAKE_CURRENT_SOURCE_DIR}/res/resource.rc ")
     endif()
-elseif(CMAKE_BUILD_TYPE MATCHES "Release")
-    # 添加 .cpp 文件
-    add_executable(${PROJECT_NAME} main.cpp ${SRCS})
-    if(EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/res/resource.rc")
-        target_sources(${PROJECT_NAME} PRIVATE res/resource.rc)
-    endif()
-    set_target_properties(${PROJECT_NAME} PROPERTIES LINK_FLAGS "/subsystem:windows /ENTRY:mainCRTStartup")
+#    set_target_properties(${PROJECT_NAME} PROPERTIES LINK_FLAGS "/subsystem:windows /ENTRY:mainCRTStartup")
+    set_target_properties(${PROJECT_NAME} PROPERTIES
+            WIN32_EXECUTABLE TRUE
+            LINK_FLAGS "/ENTRY:WinMainCRTStartup"
+    )
 else()
     # 默认情况
     add_executable(${PROJECT_NAME} main.cpp ${SRCS})
     if(EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/res/resource.rc")
-        target_sources(${PROJECT_NAME} PRIVATE res/resource.rc)
+        target_sources(${PROJECT_NAME} PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}/res/resource.rc")
+        message(" add ${CMAKE_CURRENT_SOURCE_DIR}/res/resource.rc ")
     endif()
+    set_target_properties(${PROJECT_NAME} PROPERTIES LINK_FLAGS "/ENTRY:mainCRTStartup")
 endif()
 
 ##########################################################################################
@@ -241,9 +242,9 @@ if(OTHER_LIBS)
 endif()
 
 # 如果在 Windows 上，可能需要链接一些特定的库
-#if(WIN32)
-#    target_link_libraries(${PROJECT_NAME} ws2_32 winmm)
-#endif()
+if(WIN32)
+    target_link_libraries(${PROJECT_NAME} shell32 user32)
+endif()
 
 
 ##########################################################################################
@@ -278,11 +279,19 @@ add_dependencies(${PROJECT_NAME} copy_config)
 ##########################################################################################
 ##########################################################################################
 
-
 # UTF-8 需要配置这个
 add_compile_options(/wd4828)
 if(MSVC)
+#    add_compile_options("$<$<C_COMPILER_ID:MSVC>:/utf-8>")
+#    add_compile_options("$<$<CXX_COMPILER_ID:MSVC>:/utf-8>")
     add_compile_options(/utf-8)
 else()
     add_compile_options(-finput-charset=UTF-8 -fexec-charset=UTF-8)
+endif()
+
+
+# 添加 Unicode 定义
+#add_definitions(-DUNICODE -D_UNICODE)
+if (WIN32)
+    target_compile_definitions(${PROJECT_NAME} PRIVATE UNICODE _UNICODE)
 endif()

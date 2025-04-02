@@ -150,12 +150,12 @@ void LogUtil::log(const std::wstring &level, const std::wstring &message) {
         oss << std::put_time(&now_tm, L"%Y-%m-%d %H:%M:%S");
 
         // 输出到控制台并立即刷新
-        std::wcout << L"[" << oss.str() << L"] [" << level << L"] : " << message << std::endl;
-        std::wcout.flush();
+        std::wcout << L"[" << oss.str() << L"] [" << level << L"] : " << message  << std::endl;
+//        std::wcout.flush();
 
         // 输出日志信息到文件并立即刷新
-        logFile->get() << L"[" << oss.str() << L"] [" << level << L"] : " << message << std::endl;
-        logFile->get().flush();
+        logFile->get() << L"[" << oss.str() << L"] [" << level << L"] : " << message  << std::endl;
+//        logFile->get().flush();
     }
 }
 
