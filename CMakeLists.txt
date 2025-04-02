@@ -46,6 +46,26 @@ endif()
 ##########################################################################################
 ##########################################################################################
 
+# 检查是否是多配置生成器（如 Visual Studio）
+get_property(is_multi_config GLOBAL PROPERTY GENERATOR_IS_MULTI_CONFIG)
+if(is_multi_config)
+    # 对于多配置生成器，设置默认构建类型
+    if(NOT CMAKE_CONFIGURATION_TYPES)
+        set(CMAKE_CONFIGURATION_TYPES "Debug;Release;MinSizeRel;RelWithDebInfo" CACHE STRING "" FORCE)
+    endif()
+    message(STATUS "Using multi-config generator with types: ${CMAKE_CONFIGURATION_TYPES}")
+else()
+    # 对于单配置生成器，设置默认构建类型
+    if(NOT CMAKE_BUILD_TYPE)
+        set(CMAKE_BUILD_TYPE "Release" CACHE STRING "Choose the type of build" FORCE)
+    endif()
+    message(STATUS "Using single-config generator with type: ${CMAKE_BUILD_TYPE}")
+endif()
+
+##########################################################################################
+##########################################################################################
+##########################################################################################
+
 
 # 递归查找所有的 .h 文件路径
 file(GLOB_RECURSE HEADS RELATIVE ${CMAKE_CURRENT_SOURCE_DIR} LIST_DIRECTORIES false "constant/*.h" "include/*.h")
