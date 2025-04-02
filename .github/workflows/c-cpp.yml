@@ -24,6 +24,8 @@ jobs:
     steps:
     - name: Checkout code
       uses: actions/checkout@v3
+      with:
+        fetch-depth: 0  # 获取完整历史以便计算提交数
 
     - name: Setup MSBuild
       uses: microsoft/setup-msbuild@v2
@@ -63,6 +65,12 @@ jobs:
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
+    - name: Wait for 3 seconds
+      run: |
+        echo "Waiting for 3 seconds..."
+        powershell -Command "Start-Sleep -s 3"
+        echo "Continuing with workflow..."
+
     # 创建新的 release 标签
     - name: Create release tag
       run: |
@@ -70,6 +78,12 @@ jobs:
         git push origin release
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+    - name: Wait for 3 seconds
+      run: |
+        echo "Waiting for 3 seconds..."
+        powershell -Command "Start-Sleep -s 3"
+        echo "Continuing with workflow..."
 
     # 删除已存在的发布版本
     - name: Delete existing release
@@ -81,6 +95,12 @@ jobs:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       continue-on-error: true
 
+    - name: Wait for 3 seconds
+      run: |
+        echo "Waiting for 3 seconds..."
+        powershell -Command "Start-Sleep -s 3"
+        echo "Continuing with workflow..."
+        
     # 创建新的发布版本
     - name: Create Release
       id: create_release
