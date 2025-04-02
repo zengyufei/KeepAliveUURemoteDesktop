@@ -198,11 +198,7 @@ if(CMAKE_BUILD_TYPE MATCHES "Release")
         target_sources(${PROJECT_NAME} PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}/res/resource.rc")
         message(" add ${CMAKE_CURRENT_SOURCE_DIR}/res/resource.rc ")
     endif()
-#    set_target_properties(${PROJECT_NAME} PROPERTIES LINK_FLAGS "/subsystem:windows /ENTRY:mainCRTStartup")
-    set_target_properties(${PROJECT_NAME} PROPERTIES
-            WIN32_EXECUTABLE TRUE
-            LINK_FLAGS "/ENTRY:WinMainCRTStartup"
-    )
+    set_target_properties(${PROJECT_NAME} PROPERTIES LINK_FLAGS "/subsystem:windows /ENTRY:mainCRTStartup")
 else()
     # 默认情况
     add_executable(${PROJECT_NAME} main.cpp ${SRCS})
@@ -210,7 +206,7 @@ else()
         target_sources(${PROJECT_NAME} PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}/res/resource.rc")
         message(" add ${CMAKE_CURRENT_SOURCE_DIR}/res/resource.rc ")
     endif()
-    set_target_properties(${PROJECT_NAME} PROPERTIES LINK_FLAGS "/ENTRY:mainCRTStartup")
+#    set_target_properties(${PROJECT_NAME} PROPERTIES LINK_FLAGS "/ENTRY:mainCRTStartup")
 endif()
 
 ##########################################################################################
