@@ -23,8 +23,8 @@ bool TrayIcon::Start() {
 
     running = true;
 
-    // 使用C++线程启动托盘图标线程
-    trayThread = std::thread(&TrayIcon::TrayThreadFunction, this);
+    // 使用make_unique创建线程
+    trayThread = std::make_unique<std::thread>(&TrayIcon::TrayThreadFunction, this);
 
     return true;
 }
@@ -42,9 +42,12 @@ void TrayIcon::Stop() {
     }
 
     // 等待线程结束
-    if (trayThread.joinable()) {
-        trayThread.join();
+    if (trayThread && trayThread->joinable()) {
+        trayThread->join();
     }
+
+    // 释放线程资源
+    trayThread.reset();
 
     // 移除托盘图标
     if (hwnd) {
@@ -57,23 +60,11 @@ void TrayIcon::SetExitCallback(std::function<void()> callback) {
 }
 
 void TrayIcon::TrayThreadFunction() {
-    // 注册窗口类
-    WNDCLASSEX wc = {0};
-    wc.cbSize = sizeof(WNDCLASSEX);
-    wc.lpfnWndProc = WindowProc;
-    wc.hInstance = GetModuleHandle(NULL);
-    wc.lpszClassName = WND_CLASS_NAME;
-
-    if (!RegisterClassEx(&wc)) {
-        LogUtil::error(L"Failed to register window class");
-        return;
-    }
-
-    // 创建隐藏窗口
+    // 创建一个最小化的隐藏窗口
     hwnd = CreateWindowEx(
-            0, WND_CLASS_NAME, L"Tray Icon Window",
-            WS_OVERLAPPEDWINDOW, CW_USEDEFAULT, CW_USEDEFAULT,
-            CW_USEDEFAULT, CW_USEDEFAULT, NULL, NULL, GetModuleHandle(NULL), this
+            0, L"STATIC", L"TrayIconWindow",
+            WS_OVERLAPPED, 0, 0, 0, 0, NULL, NULL,
+            GetModuleHandle(NULL), NULL
     );
 
     if (!hwnd) {
@@ -81,8 +72,11 @@ void TrayIcon::TrayThreadFunction() {
         return;
     }
 
-    // 设置窗口用户数据为this指针，以便在静态WindowProc中访问
-    SetWindowLongPtr(hwnd, GWLP_USERDATA, reinterpret_cast<LONG_PTR>(this));
+    // 子类化窗口过程
+    WNDPROC oldProc = (WNDPROC)SetWindowLongPtr(
+            hwnd, GWLP_WNDPROC, (LONG_PTR)WindowProc
+    );
+    SetWindowLongPtr(hwnd, GWLP_USERDATA, (LONG_PTR)this);
 
     // 初始化托盘图标
     nid.cbSize = sizeof(NOTIFYICONDATA);
@@ -103,8 +97,14 @@ void TrayIcon::TrayThreadFunction() {
         DispatchMessage(&msg);
     }
 
-    // 注销窗口类
-    UnregisterClass(WND_CLASS_NAME, GetModuleHandle(NULL));
+    // 移除托盘图标
+    Shell_NotifyIcon(NIM_DELETE, &nid);
+
+    // 恢复原始窗口过程
+    SetWindowLongPtr(hwnd, GWLP_WNDPROC, (LONG_PTR)oldProc);
+
+    // 销毁窗口
+    DestroyWindow(hwnd);
 }
 
 LRESULT CALLBACK TrayIcon::WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) {
@@ -122,10 +122,11 @@ LRESULT TrayIcon::HandleMessage(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lPar
     switch (uMsg) {
         case WM_TRAYICON:
             if (lParam == WM_RBUTTONUP) {
-                // 显示右键菜单
+                // 显示右键菜单 - 仅在需要时加载菜单
                 POINT pt;
                 GetCursorPos(&pt);
 
+                // 仅在用户点击时加载菜单
                 HMENU hMenu = LoadMenu(GetModuleHandle(NULL), MAKEINTRESOURCE(IDR_MENU));
                 if (hMenu) {
                     HMENU hSubMenu = GetSubMenu(hMenu, 0);
@@ -140,7 +141,7 @@ LRESULT TrayIcon::HandleMessage(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lPar
                         // 发送空消息，参见MSDN文档
                         PostMessage(hwnd, WM_NULL, 0, 0);
                     }
-                    DestroyMenu(hMenu);
+                    DestroyMenu(hMenu); // 确保菜单被销毁
                 }
             }
             return 0;

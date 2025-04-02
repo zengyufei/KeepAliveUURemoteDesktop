@@ -5,12 +5,13 @@
 #include <thread>
 #include <atomic>
 #include <functional>
+#include <memory>
 
 class TrayIcon {
 private:
     HWND hwnd;
     NOTIFYICONDATA nid;
-    std::thread trayThread;
+    std::unique_ptr<std::thread> trayThread;
     std::atomic<bool> running;
 
     // 窗口过程函数必须是静态的
